@@ -7,7 +7,8 @@ const Recommendations = ({
   setUserPortfolio, 
   setRecommendations, 
   userProfile, 
-  setUserProfile 
+  setUserProfile,
+  generateRecommendations
 }) => {
   const getPriorityColor = (priority) => {
     switch(priority) {
@@ -102,12 +103,14 @@ const Recommendations = ({
                 </div>
                 
                 <div className="flex gap-3">
-                  <button 
-                    onClick={() => handleInsuranceAction(rec, 'interested')}
-                    className="flex-1 bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 transition-colors font-medium"
+                  <a 
+                    href={rec.quoteLink} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex-1 bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 transition-colors font-medium text-center"
                   >
                     🚨 Contratar Urgente
-                  </button>
+                  </a>
                   <button 
                     onClick={() => handleInsuranceAction(rec, 'have')}
                     className="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
@@ -166,12 +169,14 @@ const Recommendations = ({
                 </div>
                 
                 <div className="flex gap-3">
-                  <button 
-                    onClick={() => handleInsuranceAction(rec, 'interested')}
-                    className="flex-1 bg-orange-600 text-white px-4 py-3 rounded-lg hover:bg-orange-700 transition-colors font-medium"
+                  <a 
+                    href={rec.quoteLink} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex-1 bg-orange-600 text-white px-4 py-3 rounded-lg hover:bg-orange-700 transition-colors font-medium text-center"
                   >
                     Cotizar ahora
-                  </button>
+                  </a>
                   <button 
                     onClick={() => handleInsuranceAction(rec, 'have')}
                     className="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
@@ -228,12 +233,14 @@ const Recommendations = ({
                 </div>
                 
                 <div className="flex gap-3">
-                  <button 
-                    onClick={() => handleInsuranceAction(rec, 'interested')}
-                    className="flex-1 bg-yellow-600 text-white px-4 py-3 rounded-lg hover:bg-yellow-700 transition-colors font-medium"
+                  <a 
+                    href={rec.quoteLink} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex-1 bg-yellow-600 text-white px-4 py-3 rounded-lg hover:bg-yellow-700 transition-colors font-medium text-center"
                   >
                     Ver opciones
-                  </button>
+                  </a>
                   <button 
                     onClick={() => handleInsuranceAction(rec, 'have')}
                     className="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
@@ -247,6 +254,18 @@ const Recommendations = ({
           </div>
         </div>
       )}
+
+      <div className="text-right mb-6">
+        <button
+          onClick={() => {
+            const newRecs = generateRecommendations(userProfile);
+            setRecommendations(newRecs);
+          }}
+          className="bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+        >
+          🔄 Generar Nuevas Recomendaciones
+        </button>
+      </div>
 
       {/* Cost Simulator */}
       <div className="bg-white border border-gray-200 rounded-xl p-6">

@@ -1,10 +1,48 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Edit, TrendingUp, Users, MapPin } from 'lucide-react';
 
 const Profile = ({ userProfile, responses, setUserProfile }) => {
   const handleEditProfile = () => {
     // Función para editar el perfil (futuro)
     alert('Funcionalidad de edición próximamente disponible');
+  };
+
+  // --- Lifestyle edit mode state ---
+  const [editMode, setEditMode] = useState(null);
+  const [tempResponses, setTempResponses] = useState({ ...responses });
+
+  // Helper: checkbox handler for multi-select (array) fields
+  const handleCheckboxChange = (field, value, checked) => {
+    setTempResponses((prev) => {
+      const updated = new Set(prev[field] || []);
+      checked ? updated.add(value) : updated.delete(value);
+      return { ...prev, [field]: Array.from(updated) };
+    });
+  };
+
+  // Helper: single-select (dropdown) change
+  const handleSelectChange = (field, value) => {
+    setTempResponses((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  // Save edit for a field
+  const saveEdit = (field) => {
+    const updatedResponses = {
+      ...responses,
+      [field]: tempResponses[field]
+    };
+
+    const updatedProfile = {
+      ...userProfile,
+      responses: updatedResponses
+    };
+
+    setUserProfile(updatedProfile);
+    localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+    setEditMode(null);
   };
 
   if (!userProfile) {
@@ -51,29 +89,221 @@ const Profile = ({ userProfile, responses, setUserProfile }) => {
       <div className="bg-white border border-gray-200 rounded-xl p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">🧾 Estilo de Vida Declarado</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="font-medium text-gray-700">Vivienda</div>
-            <div className="text-gray-900 capitalize">{responses.housing?.replace('_', ' ')}</div>
+          {/* Vivienda */}
+          <div className="p-4 bg-gray-50 rounded-lg relative">
+            <div className="font-medium text-gray-700 flex justify-between">
+              <span>Vivienda</span>
+              <button
+                onClick={() => setEditMode('housing')}
+                className="text-gray-500 hover:text-gray-800"
+                aria-label="Editar Vivienda"
+              >✏️</button>
+            </div>
+            {editMode === 'housing' ? (
+              <div>
+                <div className="mt-2">
+                  <select
+                    className="w-full border border-gray-300 rounded px-2 py-1"
+                    value={tempResponses.housing || ''}
+                    onChange={e => handleSelectChange('housing', e.target.value)}
+                  >
+                    <option value="">Seleccione...</option>
+                    <option value="casa_propia">Casa Propia</option>
+                    <option value="depto_propio">Depto Propio</option>
+                    <option value="arriendo">Arriendo</option>
+                    <option value="con_familia">Con Familia</option>
+                  </select>
+                </div>
+                <button
+                  onClick={() => saveEdit('housing')}
+                  className="mt-2 px-3 py-1 bg-blue-500 text-white text-sm rounded"
+                >Guardar</button>
+              </div>
+            ) : (
+              <div className="text-gray-900 capitalize">{responses.housing?.replace('_', ' ')}</div>
+            )}
           </div>
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="font-medium text-gray-700">Transporte</div>
-            <div className="text-gray-900 capitalize">{responses.transport}</div>
+          {/* Transporte */}
+          <div className="p-4 bg-gray-50 rounded-lg relative">
+            <div className="font-medium text-gray-700 flex justify-between">
+              <span>Transporte</span>
+              <button
+                onClick={() => setEditMode('transport')}
+                className="text-gray-500 hover:text-gray-800"
+                aria-label="Editar Transporte"
+              >✏️</button>
+            </div>
+            {editMode === 'transport' ? (
+              <div>
+                <div className="mt-2">
+                  {['auto', 'bicicleta', 'scooter', 'transporte_publico', 'moto', 'caminando'].map(option => (
+                    <label key={option} className="block text-sm text-gray-700">
+                      <input
+                        type="checkbox"
+                        value={option}
+                        checked={Array.isArray(tempResponses.transport) && tempResponses.transport.includes(option)}
+                        onChange={e => handleCheckboxChange('transport', option, e.target.checked)}
+                      />
+                      {' '}{option.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </label>
+                  ))}
+                </div>
+                <button
+                  onClick={() => saveEdit('transport')}
+                  className="mt-2 px-3 py-1 bg-blue-500 text-white text-sm rounded"
+                >Guardar</button>
+              </div>
+            ) : (
+              <div className="text-gray-900">
+                {Array.isArray(responses.transport)
+                  ? responses.transport.map((item) => item.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())).join(', ')
+                  : responses.transport?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              </div>
+            )}
           </div>
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="font-medium text-gray-700">Trabajo</div>
-            <div className="text-gray-900 capitalize">{responses.occupation}</div>
+          {/* Trabajo */}
+          <div className="p-4 bg-gray-50 rounded-lg relative">
+            <div className="font-medium text-gray-700 flex justify-between">
+              <span>Trabajo</span>
+              <button
+                onClick={() => setEditMode('occupation')}
+                className="text-gray-500 hover:text-gray-800"
+                aria-label="Editar Trabajo"
+              >✏️</button>
+            </div>
+            {editMode === 'occupation' ? (
+              <div>
+                <div className="mt-2">
+                  <select
+                    className="w-full border border-gray-300 rounded px-2 py-1"
+                    value={tempResponses.occupation || ''}
+                    onChange={e => handleSelectChange('occupation', e.target.value)}
+                  >
+                    <option value="">Seleccione...</option>
+                    <option value="dependiente">Dependiente</option>
+                    <option value="freelance">Freelance</option>
+                    <option value="emprendedor">Emprendedor</option>
+                    <option value="estudiante">Estudiante</option>
+                    <option value="jubilado">Jubilado</option>
+                  </select>
+                </div>
+                <button
+                  onClick={() => saveEdit('occupation')}
+                  className="mt-2 px-3 py-1 bg-blue-500 text-white text-sm rounded"
+                >Guardar</button>
+              </div>
+            ) : (
+              <div className="text-gray-900 capitalize">{responses.occupation}</div>
+            )}
           </div>
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="font-medium text-gray-700">Mascotas</div>
-            <div className="text-gray-900 capitalize">{responses.pets}</div>
+          {/* Mascotas */}
+          <div className="p-4 bg-gray-50 rounded-lg relative">
+            <div className="font-medium text-gray-700 flex justify-between">
+              <span>Mascotas</span>
+              <button
+                onClick={() => setEditMode('pets')}
+                className="text-gray-500 hover:text-gray-800"
+                aria-label="Editar Mascotas"
+              >✏️</button>
+            </div>
+            {editMode === 'pets' ? (
+              <div>
+                <div className="mt-2">
+                  {['perro', 'gato', 'ninguna', 'otro'].map(option => (
+                    <label key={option} className="block text-sm text-gray-700">
+                      <input
+                        type="checkbox"
+                        value={option}
+                        checked={Array.isArray(tempResponses.pets) && tempResponses.pets.includes(option)}
+                        onChange={e => handleCheckboxChange('pets', option, e.target.checked)}
+                      />
+                      {' '}{option.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </label>
+                  ))}
+                </div>
+                <button
+                  onClick={() => saveEdit('pets')}
+                  className="mt-2 px-3 py-1 bg-blue-500 text-white text-sm rounded"
+                >Guardar</button>
+              </div>
+            ) : (
+              <div className="text-gray-900">
+                {Array.isArray(responses.pets)
+                  ? responses.pets.map((item) => item.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())).join(', ')
+                  : responses.pets?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              </div>
+            )}
           </div>
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="font-medium text-gray-700">Viajes</div>
-            <div className="text-gray-900 capitalize">{responses.travel}</div>
+          {/* Viajes */}
+          <div className="p-4 bg-gray-50 rounded-lg relative">
+            <div className="font-medium text-gray-700 flex justify-between">
+              <span>Viajes</span>
+              <button
+                onClick={() => setEditMode('travel')}
+                className="text-gray-500 hover:text-gray-800"
+                aria-label="Editar Viajes"
+              >✏️</button>
+            </div>
+            {editMode === 'travel' ? (
+              <div>
+                <div className="mt-2">
+                  <select
+                    className="w-full border border-gray-300 rounded px-2 py-1"
+                    value={tempResponses.travel || ''}
+                    onChange={e => handleSelectChange('travel', e.target.value)}
+                  >
+                    <option value="">Seleccione...</option>
+                    <option value="nunca">Nunca</option>
+                    <option value="ocasional">Ocasional</option>
+                    <option value="frecuente">Frecuente</option>
+                  </select>
+                </div>
+                <button
+                  onClick={() => saveEdit('travel')}
+                  className="mt-2 px-3 py-1 bg-blue-500 text-white text-sm rounded"
+                >Guardar</button>
+              </div>
+            ) : (
+              <div className="text-gray-900 capitalize">{responses.travel}</div>
+            )}
           </div>
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="font-medium text-gray-700">Salud</div>
-            <div className="text-gray-900 capitalize">{responses.health}</div>
+          {/* Salud */}
+          <div className="p-4 bg-gray-50 rounded-lg relative">
+            <div className="font-medium text-gray-700 flex justify-between">
+              <span>Salud</span>
+              <button
+                onClick={() => setEditMode('health')}
+                className="text-gray-500 hover:text-gray-800"
+                aria-label="Editar Salud"
+              >✏️</button>
+            </div>
+            {editMode === 'health' ? (
+              <div>
+                <div className="mt-2">
+                  {['hipertension', 'diabetes', 'cancer_historial', 'ninguna', 'otros'].map(option => (
+                    <label key={option} className="block text-sm text-gray-700">
+                      <input
+                        type="checkbox"
+                        value={option}
+                        checked={Array.isArray(tempResponses.health) && tempResponses.health.includes(option)}
+                        onChange={e => handleCheckboxChange('health', option, e.target.checked)}
+                      />
+                      {' '}{option.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </label>
+                  ))}
+                </div>
+                <button
+                  onClick={() => saveEdit('health')}
+                  className="mt-2 px-3 py-1 bg-blue-500 text-white text-sm rounded"
+                >Guardar</button>
+              </div>
+            ) : (
+              <div className="text-gray-900">
+                {Array.isArray(responses.health)
+                  ? responses.health.map((item) => item.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())).join(', ')
+                  : responses.health?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -152,6 +382,26 @@ const Profile = ({ userProfile, responses, setUserProfile }) => {
               </p>
             </div>
           )}
+        </div>
+      </div>
+      {/* Raw Responses */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">📋 Respuestas Originales</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          {Object.entries(responses).map(([key, value]) => (
+            <div key={key} className="p-4 bg-gray-50 rounded-lg">
+              <div className="font-medium text-gray-700">
+                {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              </div>
+              <div className="text-gray-900">
+                {Array.isArray(value)
+                  ? value.map((item) =>
+                      item.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+                    ).join(', ')
+                  : value?.toString().replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

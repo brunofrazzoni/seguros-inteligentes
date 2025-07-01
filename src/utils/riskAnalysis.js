@@ -5,7 +5,8 @@ export const generateProfile = (responses) => {
     tags: [],
     coverageNeeds: 7,
     currentCoverage: 0,
-    lastUpdate: new Date().toLocaleDateString()
+    lastUpdate: new Date().toLocaleDateString(),
+    responses: { ...responses }
   };
 
   // Generar tags basado en respuestas

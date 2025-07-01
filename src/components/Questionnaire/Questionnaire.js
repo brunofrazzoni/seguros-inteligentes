@@ -109,19 +109,61 @@ const Questionnaire = ({
           </div>
 
           <div className="space-y-3 mb-6">
-            {currentQuestion.options.map(option => (
-              <button
-                key={option.value}
-                onClick={() => handleResponse(currentQuestion.id, option.value)}
-                className={`w-full p-4 text-left rounded-lg border-2 transition-all hover:border-blue-300 ${
-                  responses[currentQuestion.id] === option.value 
-                    ? 'border-blue-500 bg-blue-50' 
-                    : 'border-gray-200 hover:bg-gray-50'
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
+            {currentQuestion.options.map(option => {
+              const isCheckbox = currentQuestion.type === 'checkbox';
+              const selected = responses[currentQuestion.id] || (isCheckbox ? [] : '');
+              const isSelected = isCheckbox
+                ? selected.includes(option.value)
+                : selected === option.value;
+
+              const toggleCheckbox = () => {
+                let updated = [...selected];
+                if (option.value === 'ninguna') {
+                  updated = ['ninguna'];
+                } else {
+                  updated = updated.filter(v => v !== 'ninguna'); // remove "ninguna" if any other is selected
+                  if (updated.includes(option.value)) {
+                    updated = updated.filter(v => v !== option.value);
+                  } else {
+                    updated.push(option.value);
+                  }
+                }
+                handleResponse(currentQuestion.id, updated);
+              };
+
+              return (
+                <button
+                  key={option.value}
+                  onClick={() => {
+                    if (isCheckbox) {
+                      toggleCheckbox();
+                    } else {
+                      handleResponse(currentQuestion.id, option.value);
+                    }
+                  }}
+                  className={`w-full p-4 text-left rounded-lg border-2 transition-all hover:border-blue-300 ${
+                    isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+            {currentQuestion.id === 'health' && responses['health']?.includes('otros') && (
+              <div className="mt-4">
+                <label htmlFor="health_otros" className="block text-sm font-medium text-gray-700 mb-1">
+                  Especifica tu condición de salud:
+                </label>
+                <input
+                  type="text"
+                  id="health_otros"
+                  value={responses['health_otros'] || ''}
+                  onChange={(e) => handleResponse('health_otros', e.target.value)}
+                  className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Ej: asma, tiroides, etc."
+                />
+              </div>
+            )}
           </div>
 
           <div className="flex justify-between">
