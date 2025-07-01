@@ -1,7 +1,37 @@
 import React from 'react';
+import { useState, useEffect } from 'react';
+import { analyzeUserProfile } from '../../utils/aiAgent';
 import { AlertTriangle, DollarSign, TrendingUp, Brain, Check, Shield, BarChart3 } from 'lucide-react';
 
 const Dashboard = ({ userProfile, recommendations, userPortfolio, alerts, responses }) => {
+  const [aiAnalysis, setAiAnalysis] = useState(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+
+  const runAIAnalysis = async () => {
+    setAnalysisLoading(true);
+
+    const analysisInput = {
+      userProfile,
+      currentPortfolio: userPortfolio,
+      profileChanges: {}, // A futuro: detectar diferencias contra el perfil anterior
+      availableInsurance: [] // A futuro: pasar base de datos real si es necesario
+    };
+
+    try {
+      const analysis = await analyzeUserProfile(analysisInput);
+      setAiAnalysis(analysis);
+    } catch (error) {
+      console.error('Error al obtener análisis IA:', error);
+    } finally {
+      setAnalysisLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (userProfile && userPortfolio.length >= 0) {
+      runAIAnalysis();
+    }
+  }, [userProfile, userPortfolio]);
   const getProtectionLevel = () => {
     if (!userProfile) return { level: 'Bajo', color: 'red', percentage: 0 };
     
@@ -158,6 +188,55 @@ const Dashboard = ({ userProfile, recommendations, userPortfolio, alerts, respon
           )}
         </div>
       </div>
+      {aiAnalysis && (
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">🤖 Análisis IA en Tiempo Real</h3>
+            <button 
+              onClick={runAIAnalysis}
+              disabled={analysisLoading}
+              className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700"
+            >
+              {analysisLoading ? '🔄 Analizando...' : '🔄 Re-analizar'}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div className="text-center p-3 bg-white bg-opacity-80 rounded-lg">
+              <div className="text-xl font-bold text-purple-600">{aiAnalysis.analysis.portfolioScore}/10</div>
+              <div className="text-xs text-gray-600">Score Portfolio</div>
+            </div>
+            <div className="text-center p-3 bg-white bg-opacity-80 rounded-lg">
+              <div className="text-xl font-bold text-green-600">${aiAnalysis.analysis.monthlySavings.toLocaleString()}</div>
+              <div className="text-xs text-gray-600">Ahorro potencial/mes</div>
+            </div>
+            <div className="text-center p-3 bg-white bg-opacity-80 rounded-lg">
+              <div className="text-xl font-bold text-orange-600">{aiAnalysis.analysis.coverageGaps.length}</div>
+              <div className="text-xs text-gray-600">Gaps detectados</div>
+            </div>
+            <div className="text-center p-3 bg-white bg-opacity-80 rounded-lg">
+              <div className="text-xl font-bold text-blue-600">{aiAnalysis.recommendations.length}</div>
+              <div className="text-xs text-gray-600">Optimizaciones IA</div>
+            </div>
+          </div>
+
+          {aiAnalysis.recommendations.length > 0 && (
+            <div className="p-4 bg-white bg-opacity-90 rounded-lg border-l-4 border-purple-400">
+              <h4 className="font-medium text-purple-900 mb-2">💡 Recomendación Principal IA</h4>
+              <p className="text-sm text-gray-800 mb-2">{aiAnalysis.recommendations[0].action}</p>
+              <p className="text-xs text-purple-700">{aiAnalysis.recommendations[0].reasoning}</p>
+              <div className="flex items-center justify-between mt-3">
+                <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                  {aiAnalysis.recommendations[0].priority}
+                </span>
+                <button className="px-3 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700">
+                  Ver detalles
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
