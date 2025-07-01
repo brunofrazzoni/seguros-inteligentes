@@ -89,10 +89,16 @@ export const generateRecommendations = (responses, insuranceDatabase, existingPo
   if (responses.transport === 'auto') {
     const soap = insuranceDatabase.find(i => i.type === "SOAP");
     if (soap && !existingPortfolio.some(p => p.type === "SOAP")) {
+      let urgencyScore = 10;
+      let priority;
+      if (urgencyScore >= 9) priority = 'CRÍTICO';
+      else if (urgencyScore >= 7) priority = 'ALTO';
+      else priority = 'MEDIO';
       recommendations.push({
         ...soap,
         reason: "Obligatorio por ley para conductores",
-        urgencyScore: 10
+        urgencyScore,
+        priority
       });
     }
   }
@@ -100,10 +106,16 @@ export const generateRecommendations = (responses, insuranceDatabase, existingPo
   if (['freelance', 'emprendedor'].includes(responses.occupation)) {
     const salud = insuranceDatabase.find(i => i.type === "Seguro de Salud");
     if (salud && !existingPortfolio.some(p => p.type === "Seguro de Salud")) {
+      let urgencyScore = 9;
+      let priority;
+      if (urgencyScore >= 9) priority = 'CRÍTICO';
+      else if (urgencyScore >= 7) priority = 'ALTO';
+      else priority = 'MEDIO';
       recommendations.push({
         ...salud,
         reason: "Cobertura médica esencial para trabajadores independientes",
-        urgencyScore: 9
+        urgencyScore,
+        priority
       });
     }
   }
@@ -111,10 +123,16 @@ export const generateRecommendations = (responses, insuranceDatabase, existingPo
   if (responses.health === 'cancer_historial') {
     const oncologico = insuranceDatabase.find(i => i.type === "Seguro Oncológico");
     if (oncologico && !existingPortfolio.some(p => p.type === "Seguro Oncológico")) {
+      let urgencyScore = 10;
+      let priority;
+      if (urgencyScore >= 9) priority = 'CRÍTICO';
+      else if (urgencyScore >= 7) priority = 'ALTO';
+      else priority = 'MEDIO';
       recommendations.push({
         ...oncologico,
         reason: "Cobertura especializada por historial médico",
-        urgencyScore: 10
+        urgencyScore,
+        priority
       });
     }
   }
@@ -123,10 +141,16 @@ export const generateRecommendations = (responses, insuranceDatabase, existingPo
   if (['casa_propia', 'depto_propio'].includes(responses.housing)) {
     const hogar = insuranceDatabase.find(i => i.type === "Seguro de Hogar");
     if (hogar && !existingPortfolio.some(p => p.type === "Seguro de Hogar")) {
+      let urgencyScore = 8;
+      let priority;
+      if (urgencyScore >= 9) priority = 'CRÍTICO';
+      else if (urgencyScore >= 7) priority = 'ALTO';
+      else priority = 'MEDIO';
       recommendations.push({
         ...hogar,
         reason: "Protección integral para tu patrimonio inmobiliario",
-        urgencyScore: 8
+        urgencyScore,
+        priority
       });
     }
   }
@@ -134,10 +158,16 @@ export const generateRecommendations = (responses, insuranceDatabase, existingPo
   if (['freelance', 'emprendedor'].includes(responses.occupation)) {
     const rcProf = insuranceDatabase.find(i => i.type === "Seguro de Responsabilidad Civil");
     if (rcProf && !existingPortfolio.some(p => p.type === "Seguro de Responsabilidad Civil")) {
+      let urgencyScore = 7;
+      let priority;
+      if (urgencyScore >= 9) priority = 'CRÍTICO';
+      else if (urgencyScore >= 7) priority = 'ALTO';
+      else priority = 'MEDIO';
       recommendations.push({
         ...rcProf,
         reason: "Protección contra errores profesionales",
-        urgencyScore: 7
+        urgencyScore,
+        priority
       });
     }
   }
@@ -145,10 +175,16 @@ export const generateRecommendations = (responses, insuranceDatabase, existingPo
   if (['frecuente', 'ocasional'].includes(responses.travel)) {
     const viaje = insuranceDatabase.find(i => i.type === "Seguro de Viaje");
     if (viaje && !existingPortfolio.some(p => p.type === "Seguro de Viaje")) {
+      let urgencyScore = 6;
+      let priority;
+      if (urgencyScore >= 9) priority = 'CRÍTICO';
+      else if (urgencyScore >= 7) priority = 'ALTO';
+      else priority = 'MEDIO';
       recommendations.push({
         ...viaje,
         reason: "Cobertura médica y de equipaje para viajeros",
-        urgencyScore: 6
+        urgencyScore,
+        priority
       });
     }
   }
@@ -158,10 +194,16 @@ export const generateRecommendations = (responses, insuranceDatabase, existingPo
   if (petsArray.some(pet => ['perro', 'gato', 'ambos'].includes(pet)) && !petsArray.includes('ninguna')) {
     const mascotas = insuranceDatabase.find(i => i.type === "Seguro de Mascotas");
     if (mascotas && !existingPortfolio.some(p => p.type === "Seguro de Mascotas")) {
+      let urgencyScore = 5;
+      let priority;
+      if (urgencyScore >= 9) priority = 'CRÍTICO';
+      else if (urgencyScore >= 7) priority = 'ALTO';
+      else priority = 'MEDIO';
       recommendations.push({
         ...mascotas,
         reason: "Gastos veterinarios pueden ser muy altos",
-        urgencyScore: 5
+        urgencyScore,
+        priority
       });
     }
   }

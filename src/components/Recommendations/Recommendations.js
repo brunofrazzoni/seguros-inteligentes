@@ -1,6 +1,5 @@
 import React from 'react';
 import { AlertTriangle, Shield, Eye, Calculator, Check, Info } from 'lucide-react';
-import { insuranceDatabase } from '../../data/insuranceDatabase';
 
 const Recommendations = ({ 
   recommendations, 
@@ -10,7 +9,8 @@ const Recommendations = ({
   userProfile, 
   setUserProfile,
   generateRecommendations, 
-  responses
+  responses,
+  insuranceDatabase // ← ADD THIS LINE
 }) => {
   const getPriorityColor = (priority) => {
     switch(priority) {

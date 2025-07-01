@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { ChevronRight, Home, Car, Heart, Briefcase, Plane } from 'lucide-react';
 import { questionnaireData } from '../../data/insuranceDatabase';
+import { fetchInsuranceData } from '../../data/insuranceDatabase';
 import { generateProfile, generateAlerts, generateRecommendations } from '../../utils/riskAnalysis';
-import { insuranceDatabase } from '../../data/insuranceDatabase';
 
 const Questionnaire = ({ 
   responses, 
@@ -30,18 +30,18 @@ const Questionnaire = ({
 
   const generateResults = () => {
     setLoading(true);
-    
-    setTimeout(() => {
+
+    fetchInsuranceData().then((insuranceDatabase) => {
       const profile = generateProfile(responses);
       const recommendations = generateRecommendations(responses, insuranceDatabase);
       const alerts = generateAlerts(responses, []);
-      
+
       setUserProfile(profile);
       setRecommendations(recommendations);
       setAlerts(alerts);
       setLoading(false);
       setShowResults(true);
-    }, 2500);
+    });
   };
 
   const nextQuestion = () => {

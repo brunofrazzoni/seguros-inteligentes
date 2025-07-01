@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Questionnaire from './components/Questionnaire/Questionnaire';
 import Dashboard from './components/Dashboard/Dashboard';
 import Profile from './components/Profile/Profile';
@@ -6,30 +6,8 @@ import Recommendations from './components/Recommendations/Recommendations';
 import Portfolio from './components/Portfolio/Portfolio';
 import Integrations from './components/Integrations/Integrations';
 import { Shield, Bell, Settings, BarChart3, Users, Target, CreditCard } from 'lucide-react';
-import { insuranceDatabase } from './data/insuranceDatabase'; // Asegúrate que esta línea esté presente si no lo está
-
-const generateRecommendations = (profile) => {
-  if (!profile) return [];
-
-  const shuffled = insuranceDatabase
-    .map((insurance) => {
-      let score = 0;
-
-      // Validaciones más robustas para evitar errores si campos están vacíos o nulos
-      if (Array.isArray(profile.transport) && profile.transport.includes('auto') && insurance.tags?.includes('vehiculo')) score += 2;
-      if (Array.isArray(profile.pets) && profile.pets.length > 0 && insurance.tags?.includes('mascotas')) score += 2;
-      if (Array.isArray(profile.health) && profile.health.length > 0 && insurance.tags?.includes('salud')) score += 2;
-      if (profile.occupation === 'freelance' && insurance.tags?.includes('cesantia')) score += 2;
-      if (profile.occupation === 'cesante' && insurance.tags?.includes('cesantia')) score += 3;
-      if (profile.travel === 'frecuente' && insurance.tags?.includes('viajes')) score += 1;
-
-      return { ...insurance, score };
-    })
-    .filter((insurance) => insurance.score > 0)
-    .sort(() => Math.random() - 0.5); // mezcla aleatoriamente
-
-  return shuffled.slice(0, 8); // 8 recomendaciones relevantes
-};
+import { fetchInsuranceData } from './data/insuranceDatabase';
+import { generateRecommendations } from './utils/riskAnalysis';
 
 const App = () => {
   const [showResults, setShowResults] = useState(false);
@@ -39,6 +17,17 @@ const App = () => {
   const [userPortfolio, setUserPortfolio] = useState([]);
   const [userProfile, setUserProfile] = useState(null);
   const [alerts, setAlerts] = useState([]);
+  const [insuranceDatabase, setInsuranceDatabase] = useState([]);
+
+  useEffect(() => {
+    fetchInsuranceData()
+      .then((data) => {
+        setInsuranceDatabase(data);
+      })
+      .catch((error) => {
+        console.error("Error al cargar los datos de seguros:", error);
+      });
+  }, []);
 
 if (!showResults) {
   return (
@@ -124,6 +113,7 @@ if (!showResults) {
                 userProfile={userProfile}
                 responses={responses}
                 setUserProfile={setUserProfile}
+                setResponses={setResponses}
               />
             )}
             {activeTab === 'recommendations' && (
@@ -136,6 +126,7 @@ if (!showResults) {
                 setUserProfile={setUserProfile}
                 generateRecommendations={generateRecommendations}
                 responses={responses}
+                insuranceDatabase={insuranceDatabase}
               />
             )}
             {activeTab === 'portfolio' && (

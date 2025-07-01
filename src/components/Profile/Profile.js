@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Edit, TrendingUp, Users, MapPin } from 'lucide-react';
 
-const Profile = ({ userProfile, responses, setUserProfile }) => {
+const Profile = ({ userProfile, responses, setUserProfile, setResponses }) => {
   const handleEditProfile = () => {
     // Función para editar el perfil (futuro)
     alert('Funcionalidad de edición próximamente disponible');
@@ -10,6 +10,23 @@ const Profile = ({ userProfile, responses, setUserProfile }) => {
   // --- Lifestyle edit mode state ---
   const [editMode, setEditMode] = useState(null);
   const [tempResponses, setTempResponses] = useState({ ...responses });
+
+  // Inicializar tempResponses desde responses
+  const initializeTempResponses = () => {
+    setTempResponses({ ...responses });
+  };
+
+  // Abrir modo edición para un campo
+  const openEditMode = (field) => {
+    setTempResponses({ ...responses });
+    setEditMode(field);
+  };
+
+  // Cancelar edición
+  const cancelEdit = () => {
+    setTempResponses({ ...responses });
+    setEditMode(null);
+  };
 
   // Helper: checkbox handler for multi-select (array) fields
   const handleCheckboxChange = (field, value, checked) => {
@@ -35,14 +52,26 @@ const Profile = ({ userProfile, responses, setUserProfile }) => {
       [field]: tempResponses[field]
     };
 
+    // 1. Actualizar las responses originales
+    setResponses(updatedResponses);
+
+    // 2. Actualizar el perfil
     const updatedProfile = {
       ...userProfile,
-      responses: updatedResponses
+      responses: updatedResponses,
+      lastUpdate: new Date().toLocaleDateString()
     };
 
     setUserProfile(updatedProfile);
+
+    // 3. Persistencia opcional
     localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+    localStorage.setItem('userResponses', JSON.stringify(updatedResponses));
+
+    // 4. Cerrar edición
     setEditMode(null);
+
+    console.log('Guardado exitoso:', { field, newValue: tempResponses[field] });
   };
 
   if (!userProfile) {
@@ -94,7 +123,7 @@ const Profile = ({ userProfile, responses, setUserProfile }) => {
             <div className="font-medium text-gray-700 flex justify-between">
               <span>Vivienda</span>
               <button
-                onClick={() => setEditMode('housing')}
+                onClick={() => openEditMode('housing')}
                 className="text-gray-500 hover:text-gray-800"
                 aria-label="Editar Vivienda"
               >✏️</button>
@@ -114,10 +143,20 @@ const Profile = ({ userProfile, responses, setUserProfile }) => {
                     <option value="con_familia">Con Familia</option>
                   </select>
                 </div>
-                <button
-                  onClick={() => saveEdit('housing')}
-                  className="mt-2 px-3 py-1 bg-blue-500 text-white text-sm rounded"
-                >Guardar</button>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => saveEdit('housing')}
+                    className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+                  >
+                    Guardar
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400"
+                  >
+                    Cancelar
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="text-gray-900 capitalize">{responses.housing?.replace('_', ' ')}</div>
@@ -128,7 +167,7 @@ const Profile = ({ userProfile, responses, setUserProfile }) => {
             <div className="font-medium text-gray-700 flex justify-between">
               <span>Transporte</span>
               <button
-                onClick={() => setEditMode('transport')}
+                onClick={() => openEditMode('transport')}
                 className="text-gray-500 hover:text-gray-800"
                 aria-label="Editar Transporte"
               >✏️</button>
@@ -148,10 +187,20 @@ const Profile = ({ userProfile, responses, setUserProfile }) => {
                     </label>
                   ))}
                 </div>
-                <button
-                  onClick={() => saveEdit('transport')}
-                  className="mt-2 px-3 py-1 bg-blue-500 text-white text-sm rounded"
-                >Guardar</button>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => saveEdit('transport')}
+                    className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+                  >
+                    Guardar
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400"
+                  >
+                    Cancelar
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="text-gray-900">
@@ -166,7 +215,7 @@ const Profile = ({ userProfile, responses, setUserProfile }) => {
             <div className="font-medium text-gray-700 flex justify-between">
               <span>Trabajo</span>
               <button
-                onClick={() => setEditMode('occupation')}
+                onClick={() => openEditMode('occupation')}
                 className="text-gray-500 hover:text-gray-800"
                 aria-label="Editar Trabajo"
               >✏️</button>
@@ -187,10 +236,20 @@ const Profile = ({ userProfile, responses, setUserProfile }) => {
                     <option value="jubilado">Jubilado</option>
                   </select>
                 </div>
-                <button
-                  onClick={() => saveEdit('occupation')}
-                  className="mt-2 px-3 py-1 bg-blue-500 text-white text-sm rounded"
-                >Guardar</button>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => saveEdit('occupation')}
+                    className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+                  >
+                    Guardar
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400"
+                  >
+                    Cancelar
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="text-gray-900 capitalize">{responses.occupation}</div>
@@ -201,7 +260,7 @@ const Profile = ({ userProfile, responses, setUserProfile }) => {
             <div className="font-medium text-gray-700 flex justify-between">
               <span>Mascotas</span>
               <button
-                onClick={() => setEditMode('pets')}
+                onClick={() => openEditMode('pets')}
                 className="text-gray-500 hover:text-gray-800"
                 aria-label="Editar Mascotas"
               >✏️</button>
@@ -221,10 +280,20 @@ const Profile = ({ userProfile, responses, setUserProfile }) => {
                     </label>
                   ))}
                 </div>
-                <button
-                  onClick={() => saveEdit('pets')}
-                  className="mt-2 px-3 py-1 bg-blue-500 text-white text-sm rounded"
-                >Guardar</button>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => saveEdit('pets')}
+                    className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+                  >
+                    Guardar
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400"
+                  >
+                    Cancelar
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="text-gray-900">
@@ -239,7 +308,7 @@ const Profile = ({ userProfile, responses, setUserProfile }) => {
             <div className="font-medium text-gray-700 flex justify-between">
               <span>Viajes</span>
               <button
-                onClick={() => setEditMode('travel')}
+                onClick={() => openEditMode('travel')}
                 className="text-gray-500 hover:text-gray-800"
                 aria-label="Editar Viajes"
               >✏️</button>
@@ -258,10 +327,20 @@ const Profile = ({ userProfile, responses, setUserProfile }) => {
                     <option value="frecuente">Frecuente</option>
                   </select>
                 </div>
-                <button
-                  onClick={() => saveEdit('travel')}
-                  className="mt-2 px-3 py-1 bg-blue-500 text-white text-sm rounded"
-                >Guardar</button>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => saveEdit('travel')}
+                    className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+                  >
+                    Guardar
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400"
+                  >
+                    Cancelar
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="text-gray-900 capitalize">{responses.travel}</div>
@@ -272,7 +351,7 @@ const Profile = ({ userProfile, responses, setUserProfile }) => {
             <div className="font-medium text-gray-700 flex justify-between">
               <span>Salud</span>
               <button
-                onClick={() => setEditMode('health')}
+                onClick={() => openEditMode('health')}
                 className="text-gray-500 hover:text-gray-800"
                 aria-label="Editar Salud"
               >✏️</button>
@@ -292,10 +371,20 @@ const Profile = ({ userProfile, responses, setUserProfile }) => {
                     </label>
                   ))}
                 </div>
-                <button
-                  onClick={() => saveEdit('health')}
-                  className="mt-2 px-3 py-1 bg-blue-500 text-white text-sm rounded"
-                >Guardar</button>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => saveEdit('health')}
+                    className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+                  >
+                    Guardar
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400"
+                  >
+                    Cancelar
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="text-gray-900">
