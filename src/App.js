@@ -135,6 +135,7 @@ if (!showResults) {
                 userProfile={userProfile}
                 setUserProfile={setUserProfile}
                 generateRecommendations={generateRecommendations}
+                responses={responses}
               />
             )}
             {activeTab === 'portfolio' && (

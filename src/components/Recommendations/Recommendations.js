@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle, Shield, Eye, Calculator, Check, Info } from 'lucide-react';
+import { insuranceDatabase } from '../../data/insuranceDatabase';
 
 const Recommendations = ({ 
   recommendations, 
@@ -8,7 +9,8 @@ const Recommendations = ({
   setRecommendations, 
   userProfile, 
   setUserProfile,
-  generateRecommendations
+  generateRecommendations, 
+  responses
 }) => {
   const getPriorityColor = (priority) => {
     switch(priority) {
@@ -258,15 +260,45 @@ const Recommendations = ({
       <div className="text-right mb-6">
         <button
           onClick={() => {
-            const newRecs = generateRecommendations(userProfile);
-            setRecommendations(newRecs);
+            console.log('=== DEBUG: Botón clickeado ===');
+            console.log('responses:', responses);
+            console.log('userPortfolio:', userPortfolio);
+            console.log('insuranceDatabase:', insuranceDatabase);
+            
+            if (!responses) {
+              console.error('ERROR: responses es undefined');
+              alert('Error: No hay respuestas del cuestionario');
+              return;
+            }
+            
+            if (!insuranceDatabase) {
+              console.error('ERROR: insuranceDatabase es undefined');
+              alert('Error: No hay base de datos de seguros');
+              return;
+            }
+            
+            try {
+              const newRecs = generateRecommendations(responses, insuranceDatabase, userPortfolio);
+              console.log('newRecs generadas:', newRecs);
+              
+              if (newRecs.length === 0) {
+                console.log('No se generaron recomendaciones - todas ya están en portfolio');
+                alert('No hay nuevas recomendaciones disponibles. Es posible que ya tengas todos los seguros recomendados para tu perfil.');
+              } else {
+                setRecommendations(newRecs);
+                console.log('Recomendaciones actualizadas exitosamente');
+              }
+            } catch (error) {
+              console.error('ERROR en generateRecommendations:', error);
+              alert('Error al generar recomendaciones: ' + error.message);
+            }
           }}
           className="bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
         >
           🔄 Generar Nuevas Recomendaciones
         </button>
       </div>
-
+      
       {/* Cost Simulator */}
       <div className="bg-white border border-gray-200 rounded-xl p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">

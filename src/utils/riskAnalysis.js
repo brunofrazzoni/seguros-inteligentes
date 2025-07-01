@@ -82,13 +82,13 @@ export const generateAlerts = (responses, userPortfolio) => {
   return alerts;
 };
 
-export const generateRecommendations = (responses, insuranceDatabase) => {
+export const generateRecommendations = (responses, insuranceDatabase, existingPortfolio = []) => {
   const recommendations = [];
   
   // CRÍTICOS
   if (responses.transport === 'auto') {
     const soap = insuranceDatabase.find(i => i.type === "SOAP");
-    if (soap) {
+    if (soap && !existingPortfolio.some(p => p.type === "SOAP")) {
       recommendations.push({
         ...soap,
         reason: "Obligatorio por ley para conductores",
@@ -99,7 +99,7 @@ export const generateRecommendations = (responses, insuranceDatabase) => {
   
   if (['freelance', 'emprendedor'].includes(responses.occupation)) {
     const salud = insuranceDatabase.find(i => i.type === "Seguro de Salud");
-    if (salud) {
+    if (salud && !existingPortfolio.some(p => p.type === "Seguro de Salud")) {
       recommendations.push({
         ...salud,
         reason: "Cobertura médica esencial para trabajadores independientes",
@@ -110,7 +110,7 @@ export const generateRecommendations = (responses, insuranceDatabase) => {
   
   if (responses.health === 'cancer_historial') {
     const oncologico = insuranceDatabase.find(i => i.type === "Seguro Oncológico");
-    if (oncologico) {
+    if (oncologico && !existingPortfolio.some(p => p.type === "Seguro Oncológico")) {
       recommendations.push({
         ...oncologico,
         reason: "Cobertura especializada por historial médico",
@@ -122,7 +122,7 @@ export const generateRecommendations = (responses, insuranceDatabase) => {
   // ALTOS
   if (['casa_propia', 'depto_propio'].includes(responses.housing)) {
     const hogar = insuranceDatabase.find(i => i.type === "Seguro de Hogar");
-    if (hogar) {
+    if (hogar && !existingPortfolio.some(p => p.type === "Seguro de Hogar")) {
       recommendations.push({
         ...hogar,
         reason: "Protección integral para tu patrimonio inmobiliario",
@@ -133,7 +133,7 @@ export const generateRecommendations = (responses, insuranceDatabase) => {
   
   if (['freelance', 'emprendedor'].includes(responses.occupation)) {
     const rcProf = insuranceDatabase.find(i => i.type === "Seguro de Responsabilidad Civil");
-    if (rcProf) {
+    if (rcProf && !existingPortfolio.some(p => p.type === "Seguro de Responsabilidad Civil")) {
       recommendations.push({
         ...rcProf,
         reason: "Protección contra errores profesionales",
@@ -144,7 +144,7 @@ export const generateRecommendations = (responses, insuranceDatabase) => {
   
   if (['frecuente', 'ocasional'].includes(responses.travel)) {
     const viaje = insuranceDatabase.find(i => i.type === "Seguro de Viaje");
-    if (viaje) {
+    if (viaje && !existingPortfolio.some(p => p.type === "Seguro de Viaje")) {
       recommendations.push({
         ...viaje,
         reason: "Cobertura médica y de equipaje para viajeros",
@@ -154,9 +154,10 @@ export const generateRecommendations = (responses, insuranceDatabase) => {
   }
   
   // MEDIOS
-  if (['perro', 'gato', 'ambos'].includes(responses.pets)) {
+  const petsArray = Array.isArray(responses.pets) ? responses.pets : [responses.pets];
+  if (petsArray.some(pet => ['perro', 'gato', 'ambos'].includes(pet)) && !petsArray.includes('ninguna')) {
     const mascotas = insuranceDatabase.find(i => i.type === "Seguro de Mascotas");
-    if (mascotas) {
+    if (mascotas && !existingPortfolio.some(p => p.type === "Seguro de Mascotas")) {
       recommendations.push({
         ...mascotas,
         reason: "Gastos veterinarios pueden ser muy altos",
