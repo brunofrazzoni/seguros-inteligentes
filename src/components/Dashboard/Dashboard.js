@@ -1,11 +1,13 @@
 import React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { analyzeUserProfile } from '../../utils/aiAgent';
 import { AlertTriangle, DollarSign, TrendingUp, Brain, Check, Shield, BarChart3 } from 'lucide-react';
 
 const Dashboard = ({ userProfile, recommendations, userPortfolio, alerts, responses }) => {
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
+
+  const hasRunAnalysis = useRef(false);
 
   const runAIAnalysis = async () => {
     setAnalysisLoading(true);
@@ -28,7 +30,14 @@ const Dashboard = ({ userProfile, recommendations, userPortfolio, alerts, respon
   };
 
   useEffect(() => {
-    if (userProfile && userPortfolio.length >= 0) {
+    if (
+      !hasRunAnalysis.current &&
+      userProfile &&
+      typeof userProfile === 'object' &&
+      userPortfolio &&
+      Array.isArray(userPortfolio)
+    ) {
+      hasRunAnalysis.current = true;
       runAIAnalysis();
     }
   }, [userProfile, userPortfolio]);

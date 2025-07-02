@@ -18,7 +18,10 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "frontend": "echo '🎨 Frontend iniciado en http://localhost:3000' && react-scripts start",
+    "backend": "echo '🔧 Backend iniciado en http://localhost:5001' && node backend-ai/index.js",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\""
   },
   "browserslist": {
     "production": [
@@ -38,6 +41,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "concurrently": "^9.2.0",
     "vite": "^7.0.0"
   }
 }

@@ -1,6 +1,11 @@
-import dotenv from 'dotenv';
-import path from 'path';
-dotenv.config({ path: path.resolve('./.env') });
+const dotenv = require('dotenv');
+const path = require('path');
+const express = require('express');
+const cors = require('cors');
+const analyzeProfileRouter = require('./routes/analyzeProfile');
+
+
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 console.log('✅ OPENAI_API_KEY desde .env:', process.env.OPENAI_API_KEY);
 
 // Verificación
@@ -8,10 +13,6 @@ if (!process.env.OPENAI_API_KEY) {
   console.error('❌ OPENAI_API_KEY no encontrada');
   process.exit(1);
 }
-
-import express from 'express';
-import cors from 'cors';
-import analyzeProfileRouter from './routes/analyzeProfile.js';
 
 const app = express();
 app.use(cors());

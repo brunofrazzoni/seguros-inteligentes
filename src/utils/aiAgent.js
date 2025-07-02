@@ -1,6 +1,6 @@
 // src/utils/aiAgent.js
 
-const API_URL = 'http://localhost:5001/api/analyze'; // Endpoint del backend
+const API_URL = 'http://localhost:5001/api/analyze-profile'; // Endpoint del backend
 
 /**
  * Envía el perfil del usuario al backend para análisis con IA.
