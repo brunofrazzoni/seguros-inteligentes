@@ -261,26 +261,42 @@ const Recommendations = ({
         <button
           onClick={() => {
             console.log('=== DEBUG: Botón clickeado ===');
+            const allTypes = insuranceDatabase.map(item => item.type);
+            const undefinedTypes = allTypes.filter(t => typeof t === 'undefined' || t === null || t === '');
+            console.log('Tipos de seguros en base de datos:', allTypes);
+            console.log('Tipos undefined o vacíos:', undefinedTypes.length);
             console.log('responses:', responses);
             console.log('userPortfolio:', userPortfolio);
             console.log('insuranceDatabase:', insuranceDatabase);
-            
+            console.log('insuranceDatabase raw sample:', insuranceDatabase?.slice?.(0, 3));
+            insuranceDatabase?.slice?.(0, 3)?.forEach((item, i) => {
+              console.log(`item[${i}].type =`, item.type);
+              console.log('Full item:', item);
+            });
+            console.log('userProfile:', userProfile);
+
             if (!responses) {
               console.error('ERROR: responses es undefined');
               alert('Error: No hay respuestas del cuestionario');
               return;
             }
-            
+
             if (!insuranceDatabase) {
               console.error('ERROR: insuranceDatabase es undefined');
               alert('Error: No hay base de datos de seguros');
               return;
             }
-            
+
+            // Enriquecer insuranceDatabase usando solo 'type' correctamente nombrado en el JSON
+            const enrichedDatabase = insuranceDatabase.map(item => ({
+              ...item,
+              type: item.type
+            }));
+
             try {
-              const newRecs = generateRecommendations(responses, insuranceDatabase, userPortfolio);
+              const newRecs = generateRecommendations(responses, enrichedDatabase, userPortfolio, userProfile);
               console.log('newRecs generadas:', newRecs);
-              
+
               if (newRecs.length === 0) {
                 console.log('No se generaron recomendaciones - todas ya están en portfolio');
                 alert('No hay nuevas recomendaciones disponibles. Es posible que ya tengas todos los seguros recomendados para tu perfil.');

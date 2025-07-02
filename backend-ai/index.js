@@ -1,7 +1,13 @@
 import dotenv from 'dotenv';
 import path from 'path';
-dotenv.config({ path: path.resolve('./backend-ai/.env') });
+dotenv.config({ path: path.resolve('./.env') });
 console.log('✅ OPENAI_API_KEY desde .env:', process.env.OPENAI_API_KEY);
+
+// Verificación
+if (!process.env.OPENAI_API_KEY) {
+  console.error('❌ OPENAI_API_KEY no encontrada');
+  process.exit(1);
+}
 
 import express from 'express';
 import cors from 'cors';

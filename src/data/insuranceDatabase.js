@@ -6,20 +6,20 @@ export const fetchInsuranceData = async () => {
     }
     const data = await response.json();
 
-    // Formatear o adaptar los datos según la estructura esperada
+    // Asumir que los datos ya vienen con las claves estandarizadas
     const formattedData = data.map((row, index) => ({
       id: index + 1,
-      provider: row["Compañía"],
-      type: row["Tipo de Seguro"],
-      plan: row["Plan"],
-      cost: parseInt(row["Costo Mensual (CLP)"] || "0", 10),
-      mainCoverage: row["Cobertura Principal"],
-      maxCoverage: row["Tope Máximo"],
-      specialConditions: row["Condiciones Especiales"],
-      availableFor: row["Disponible Para"],
-      category: row["Categoría"],
-      priority: row["Prioridad"],
-      quoteLink: row["Link Cotizar"]
+      provider: row.provider,
+      type: row.type,
+      plan: row.plan,
+      cost: parseInt(row.cost || "0", 10),
+      mainCoverage: row.mainCoverage,
+      maxCoverage: row.maxCoverage,
+      specialConditions: row.specialConditions,
+      availableFor: row.availableFor,
+      category: row.category || "",
+      priority: row.priority || "",
+      quoteLink: row.quoteLink
     }));
 
     return formattedData;
