@@ -41,6 +41,7 @@ const Questionnaire = ({
       setAlerts(alerts);
       setLoading(false);
       setShowResults(true);
+      localStorage.setItem('onboardingCompleted', 'true');
     });
   };
 

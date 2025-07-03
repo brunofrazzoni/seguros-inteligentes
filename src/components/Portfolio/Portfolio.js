@@ -36,8 +36,22 @@ const Portfolio = ({ userPortfolio, setUserPortfolio, userProfile, setUserProfil
     return Math.round((userProfile.currentCoverage / userProfile.coverageNeeds) * 100);
   };
 
+  // Mostrar insights personalizados
+  const insightsIA = userProfile?.insightsIA || [];
+
   return (
-    <div className="space-y-6">
+    <div>
+      {insightsIA.length > 0 && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded">
+          <h3 className="text-lg font-semibold text-yellow-800 mb-2">🔍 Insights de Optimización</h3>
+          <ul className="list-disc pl-5 text-yellow-700 space-y-1">
+            {insightsIA.map((insight, index) => (
+              <li key={index}>{insight}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">💼 Mi Cartera de Seguros</h2>
@@ -240,6 +254,7 @@ const Portfolio = ({ userPortfolio, setUserPortfolio, userProfile, setUserProfil
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

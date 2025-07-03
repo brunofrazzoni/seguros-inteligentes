@@ -449,25 +449,17 @@ const Profile = ({ userProfile, responses, setUserProfile, setResponses }) => {
       <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">💡 Insights Personalizados</h3>
         <div className="space-y-3">
-          <div className="p-4 bg-white bg-opacity-80 rounded-lg">
-            <p className="text-gray-800">
-              Tu perfil de <strong>{userProfile.lifestyle}</strong> indica un riesgo {userProfile.riskScore >= 7 ? 'elevado' : 'moderado'} 
-              que requiere atención en {userProfile.coverageNeeds - userProfile.currentCoverage} áreas de protección.
-            </p>
-          </div>
-          {responses.occupation === 'freelance' && (
+          {userProfile.insightsIA && userProfile.insightsIA.length > 0 ? (
+            userProfile.insightsIA.map((insight, index) => (
+              <div key={index} className="p-4 bg-white bg-opacity-80 rounded-lg">
+                <p className="text-gray-800">{insight}</p>
+              </div>
+            ))
+          ) : (
             <div className="p-4 bg-white bg-opacity-80 rounded-lg">
               <p className="text-gray-800">
-                Como freelancer, tu mayor vulnerabilidad está en la falta de protección social. 
-                Prioriza seguro de salud y cesantía.
-              </p>
-            </div>
-          )}
-          {responses.transport === 'auto' && (
-            <div className="p-4 bg-white bg-opacity-80 rounded-lg">
-              <p className="text-gray-800">
-                Tu movilidad en auto aumenta significativamente tu exposición a riesgos. 
-                Considera cobertura completa más allá del SOAP obligatorio.
+                Tu perfil de <strong>{userProfile.lifestyle}</strong> indica un riesgo {userProfile.riskScore >= 7 ? 'elevado' : 'moderado'} 
+                que requiere atención en {userProfile.coverageNeeds - userProfile.currentCoverage} áreas de protección.
               </p>
             </div>
           )}

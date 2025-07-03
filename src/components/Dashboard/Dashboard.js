@@ -1,6 +1,7 @@
 import React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { analyzeUserProfile } from '../../utils/aiAgent';
+import config from '../../config';
 import { AlertTriangle, DollarSign, TrendingUp, Brain, Check, Shield, BarChart3 } from 'lucide-react';
 
 const Dashboard = ({ userProfile, recommendations, userPortfolio, alerts, responses }) => {
@@ -11,12 +12,19 @@ const Dashboard = ({ userProfile, recommendations, userPortfolio, alerts, respon
 
   const runAIAnalysis = async () => {
     setAnalysisLoading(true);
+    let availableInsurance = [];
+    try {
+      availableInsurance = await fetch(`${config.BACKEND_URL}/api/insurance-database`).then(res => res.json());
+    } catch (err) {
+      console.error('Error al cargar la base de datos de seguros:', err);
+      availableInsurance = [];
+    }
 
     const analysisInput = {
       userProfile,
       currentPortfolio: userPortfolio,
       profileChanges: {}, // A futuro: detectar diferencias contra el perfil anterior
-      availableInsurance: [] // A futuro: pasar base de datos real si es necesario
+      availableInsurance
     };
 
     try {
@@ -31,16 +39,30 @@ const Dashboard = ({ userProfile, recommendations, userPortfolio, alerts, respon
 
   useEffect(() => {
     if (
-      !hasRunAnalysis.current &&
       userProfile &&
       typeof userProfile === 'object' &&
       userPortfolio &&
       Array.isArray(userPortfolio)
     ) {
+      if (!aiAnalysis) {
+        hasRunAnalysis.current = false;
+      }
+    }
+  }, [userProfile, userPortfolio, aiAnalysis]);
+
+  useEffect(() => {
+    if (
+      userProfile &&
+      typeof userProfile === 'object' &&
+      userPortfolio &&
+      Array.isArray(userPortfolio) &&
+      !aiAnalysis &&
+      !hasRunAnalysis.current
+    ) {
       hasRunAnalysis.current = true;
       runAIAnalysis();
     }
-  }, [userProfile, userPortfolio]);
+  }, [userProfile, userPortfolio, aiAnalysis]);
   const getProtectionLevel = () => {
     if (!userProfile) return { level: 'Bajo', color: 'red', percentage: 0 };
     
@@ -169,83 +191,129 @@ const Dashboard = ({ userProfile, recommendations, userPortfolio, alerts, respon
         </div>
       </div>
 
-      {/* IA Tips */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">🧠 Tips IA Personalizados</h3>
-        <div className="space-y-3">
-          <div className="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-            <p className="text-gray-800">
-              Como {responses.occupation === 'freelance' ? 'freelancer' : responses.occupation}, 
-              te recomendamos priorizar seguro de salud y RC profesional para proteger tus ingresos.
-            </p>
+      <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6">
+        {analysisLoading && (
+          <div className="bg-white border border-gray-300 rounded-xl p-6 text-center text-gray-500 italic">
+            Generando recomendaciones con IA...<br />
+            <span className="text-xs text-gray-400">(esto puede tomar ~10-15 segundos)</span>
           </div>
-          {responses.transport === 'auto' && (
-            <div className="p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
-              <p className="text-gray-800">
-                💡 Dato: El 89% de conductores en Chile solo tiene SOAP. 
-                Considera un seguro automotriz completo para mayor protección.
-              </p>
-            </div>
-          )}
-          {responses.pets !== 'ninguna' && (
-            <div className="p-4 bg-purple-50 rounded-lg border-l-4 border-purple-400">
-              <p className="text-gray-800">
-                🐾 Con mascotas, los gastos veterinarios pueden superar los $500.000 anuales. 
-                Un seguro de mascotas puede ahorrarte hasta 70% en emergencias.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-      {aiAnalysis && (
-        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">🤖 Análisis IA en Tiempo Real</h3>
+        )}
+
+        {!analysisLoading && !aiAnalysis && (
+          <div className="text-center">
             <button 
               onClick={runAIAnalysis}
-              disabled={analysisLoading}
-              className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700"
+              className="px-4 py-2 bg-purple-600 text-white rounded text-sm hover:bg-purple-700"
             >
-              {analysisLoading ? '🔄 Analizando...' : '🔄 Re-analizar'}
+              🚀 Generar recomendaciones con IA
             </button>
           </div>
+        )}
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            <div className="text-center p-3 bg-white bg-opacity-80 rounded-lg">
-              <div className="text-xl font-bold text-purple-600">{aiAnalysis.analysis.portfolioScore}/10</div>
-              <div className="text-xs text-gray-600">Score Portfolio</div>
+        {!analysisLoading && aiAnalysis && (
+          <>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">🤖 Análisis IA en Tiempo Real</h3>
+              <button 
+                onClick={runAIAnalysis}
+                disabled={analysisLoading}
+                className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700"
+              >
+                {analysisLoading ? '🔄 Analizando...' : '🔄 Re-analizar'}
+              </button>
             </div>
-            <div className="text-center p-3 bg-white bg-opacity-80 rounded-lg">
-              <div className="text-xl font-bold text-green-600">${aiAnalysis.analysis.monthlySavings.toLocaleString()}</div>
-              <div className="text-xs text-gray-600">Ahorro potencial/mes</div>
-            </div>
-            <div className="text-center p-3 bg-white bg-opacity-80 rounded-lg">
-              <div className="text-xl font-bold text-orange-600">{aiAnalysis.analysis.coverageGaps.length}</div>
-              <div className="text-xs text-gray-600">Gaps detectados</div>
-            </div>
-            <div className="text-center p-3 bg-white bg-opacity-80 rounded-lg">
-              <div className="text-xl font-bold text-blue-600">{aiAnalysis.recommendations.length}</div>
-              <div className="text-xs text-gray-600">Optimizaciones IA</div>
-            </div>
-          </div>
 
-          {aiAnalysis.recommendations.length > 0 && (
-            <div className="p-4 bg-white bg-opacity-90 rounded-lg border-l-4 border-purple-400">
-              <h4 className="font-medium text-purple-900 mb-2">💡 Recomendación Principal IA</h4>
-              <p className="text-sm text-gray-800 mb-2">{aiAnalysis.recommendations[0].action}</p>
-              <p className="text-xs text-purple-700">{aiAnalysis.recommendations[0].reasoning}</p>
-              <div className="flex items-center justify-between mt-3">
-                <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
-                  {aiAnalysis.recommendations[0].priority}
-                </span>
-                <button className="px-3 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700">
-                  Ver detalles
-                </button>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div className="text-center p-3 bg-white bg-opacity-80 rounded-lg">
+                <div className="text-xl font-bold text-purple-600">{aiAnalysis.analysis.portfolioScore}/10</div>
+                <div className="text-xs text-gray-600">Score Portfolio</div>
+              </div>
+              <div className="text-center p-3 bg-white bg-opacity-80 rounded-lg">
+                <div className="text-xl font-bold text-green-600">${aiAnalysis.analysis.monthlySavings.toLocaleString()}</div>
+                <div className="text-xs text-gray-600">Ahorro potencial/mes</div>
+              </div>
+              <div className="text-center p-3 bg-white bg-opacity-80 rounded-lg">
+                <div className="text-xl font-bold text-orange-600">{aiAnalysis.analysis.coverageGaps.length}</div>
+                <div className="text-xs text-gray-600">Gaps detectados</div>
+              </div>
+              <div className="text-center p-3 bg-white bg-opacity-80 rounded-lg">
+                <div className="text-xl font-bold text-blue-600">{aiAnalysis.recommendations.length}</div>
+                <div className="text-xs text-gray-600">Optimizaciones IA</div>
               </div>
             </div>
-          )}
-        </div>
-      )}
+
+            {aiAnalysis.recommendations.length > 0 && (
+              <div className="p-4 bg-white bg-opacity-90 rounded-lg border-l-4 border-purple-400">
+                <h4 className="font-medium text-purple-900 mb-2">💡 Recomendación Principal IA</h4>
+                <p className="text-sm text-gray-800 mb-2">
+                  {aiAnalysis.recommendations
+                    .filter(r => r.priority === 'CRÍTICO')
+                    .sort((a, b) => b.urgencyScore - a.urgencyScore)[0]?.action}
+                </p>
+                <p className="text-xs text-purple-700">
+                  {aiAnalysis.recommendations
+                    .filter(r => r.priority === 'CRÍTICO')
+                    .sort((a, b) => b.urgencyScore - a.urgencyScore)[0]?.reasoning}
+                </p>
+                <div className="flex items-center justify-between mt-3">
+                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                    {aiAnalysis.recommendations
+                      .filter(r => r.priority === 'CRÍTICO')
+                      .sort((a, b) => b.urgencyScore - a.urgencyScore)[0]?.priority}
+                  </span>
+                  <button className="px-3 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700">
+                    Ver detalles
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {(responses.occupation || responses.transport || responses.pets) && (
+              <div className="bg-white border border-gray-200 rounded-xl p-6 mt-4">
+                <h4 className="font-semibold text-gray-900 mb-3">💡 Recomendaciones según tu perfil</h4>
+                <div className="space-y-3 text-sm text-gray-800">
+                  {responses.occupation && (
+                    <p>Como {responses.occupation === 'freelance' ? 'freelancer' : responses.occupation}, te recomendamos priorizar seguro de salud y RC profesional para proteger tus ingresos.</p>
+                  )}
+                  {responses.transport === 'auto' && (
+                    <p>💡 Dato: El 89% de conductores en Chile solo tiene SOAP. Considera un seguro automotriz completo para mayor protección.</p>
+                  )}
+                  {responses.pets !== 'ninguna' && (
+                    <p>🐾 Con mascotas, los gastos veterinarios pueden superar los $500.000 anuales. Un seguro de mascotas puede ahorrarte hasta 70% en emergencias.</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Gaps de cobertura y alertas IA */}
+            {aiAnalysis.analysis.coverageGaps.length > 0 && (
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mt-6 rounded-lg">
+                <h4 className="text-yellow-900 font-semibold mb-2">🔍 Gaps de Cobertura Detectados</h4>
+                <ul className="list-disc list-inside text-sm text-yellow-800 space-y-1">
+                  {aiAnalysis.analysis.coverageGaps.map((gap, index) => (
+                    <li key={index}>{gap}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {aiAnalysis.alerts && aiAnalysis.alerts.length > 0 && (
+              <div className="bg-orange-50 border-l-4 border-orange-400 p-4 mt-6 rounded-lg">
+                <h4 className="text-orange-900 font-semibold mb-2">🚨 Alertas Inteligencia Artificial</h4>
+                <ul className="space-y-2 text-sm text-orange-800">
+                  {aiAnalysis.alerts.map((alert, index) => (
+                    <li key={index}>
+                      <div className="font-medium">{alert.title}</div>
+                      <div className="text-xs opacity-80">{alert.description}</div>
+                      <div className="text-xs italic mt-1 text-orange-600">➡ {alert.action}</div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };

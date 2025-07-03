@@ -1,8 +1,31 @@
 import React from 'react';
 import { AlertTriangle, Shield, Eye, Calculator, Check, Info } from 'lucide-react';
+import config from '../../config';
+
+// Función para guardar el portafolio actualizado en el backend
+const savePortfolioToBackend = async (updatedPortfolio) => {
+  try {
+    const response = await fetch(`${config.BACKEND_URL}/api/updatePortfolio`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ portfolio: updatedPortfolio }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al guardar el portafolio en el backend');
+    }
+
+    console.log('✅ Portafolio actualizado en backend');
+  } catch (error) {
+    console.error('❌ Error al guardar portafolio:', error);
+  }
+};
 
 const Recommendations = ({ 
   recommendations, 
+  recommendationsIA, // ← NUEVO
   userPortfolio, 
   setUserPortfolio, 
   setRecommendations, 
@@ -10,8 +33,9 @@ const Recommendations = ({
   setUserProfile,
   generateRecommendations, 
   responses,
-  insuranceDatabase // ← ADD THIS LINE
+  insuranceDatabase
 }) => {
+  const activeRecommendations = recommendationsIA?.length > 0 ? recommendationsIA : recommendations;
   const getPriorityColor = (priority) => {
     switch(priority) {
       case 'CRÍTICO': return 'bg-red-100 text-red-800 border-red-200';
@@ -45,10 +69,12 @@ const Recommendations = ({
           currentCoverage: prev.currentCoverage + 1
         }));
       }
+      // Guardar portafolio actualizado en backend
+      savePortfolioToBackend([...userPortfolio, { ...insurance, addedDate: new Date().toLocaleDateString() }]);
     }
   };
 
-  const totalMonthlyCost = recommendations.reduce((total, rec) => total + rec.cost, 0);
+  const totalMonthlyCost = activeRecommendations.reduce((total, rec) => total + rec.cost, 0);
 
   return (
     <div className="space-y-6">
@@ -63,15 +89,66 @@ const Recommendations = ({
         </div>
       </div>
 
+      {/* Replace Recommendations */}
+      {activeRecommendations.filter(r => r.type === 'REPLACE').length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold text-blue-800 mb-4 flex items-center">
+            <Shield className="w-5 h-5 mr-2" />
+            🔁 Reemplazos Sugeridos
+          </h3>
+          <div className="space-y-4">
+            {activeRecommendations.filter(r => r.type === 'REPLACE').map((rec, index) => (
+              <div key={rec.id} className="border border-blue-200 bg-blue-50 rounded-xl p-6 hover:shadow-lg transition-shadow">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                  {/* Seguro Actual */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">🔒 Seguro Actual</h4>
+                    <div className="text-lg font-semibold text-gray-900">{rec.currentInsurance?.plan}</div>
+                    <div className="text-sm text-gray-600">{rec.currentInsurance?.provider}</div>
+                    <div className="text-xs text-gray-500 mt-1">{rec.currentInsurance?.mainCoverage}</div>
+                  </div>
+                  {/* Seguro Sugerido */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">✨ Sugerido</h4>
+                    <div className="text-lg font-semibold text-gray-900">{rec.suggestedInsurance?.plan}</div>
+                    <div className="text-sm text-gray-600">{rec.suggestedInsurance?.provider}</div>
+                    <div className="text-xs text-gray-500 mt-1">{rec.suggestedInsurance?.mainCoverage}</div>
+                  </div>
+                </div>
+                <div className="text-sm text-blue-700 font-medium mb-2">💡 {rec.reason}</div>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => {
+                      setUserPortfolio(prev => [
+                        ...prev.filter(p => p.plan !== rec.currentInsurance?.plan),
+                        { ...rec.suggestedInsurance, addedDate: new Date().toLocaleDateString() }
+                      ]);
+                      setRecommendations(prev => prev.filter(r => r.id !== rec.id));
+                      savePortfolioToBackend([
+                        ...userPortfolio.filter(p => p.plan !== rec.currentInsurance?.plan),
+                        { ...rec.suggestedInsurance, addedDate: new Date().toLocaleDateString() }
+                      ]);
+                    }}
+                    className="flex-1 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-center"
+                  >
+                    Reemplazar por Sugerido
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Critical Recommendations */}
-      {recommendations.filter(r => r.priority === 'CRÍTICO').length > 0 && (
+      {activeRecommendations.filter(r => r.priority === 'CRÍTICO').length > 0 && (
         <div>
           <h3 className="text-lg font-semibold text-red-800 mb-4 flex items-center">
             <AlertTriangle className="w-5 h-5 mr-2" />
             🚨 Seguros Críticos (Urgente)
           </h3>
           <div className="space-y-4">
-            {recommendations.filter(r => r.priority === 'CRÍTICO').map((rec, index) => (
+            {activeRecommendations.filter(r => r.priority === 'CRÍTICO').map((rec, index) => (
               <div key={rec.id} className="border-l-4 border-red-500 bg-red-50 rounded-xl p-6 hover:shadow-lg transition-shadow">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
@@ -128,14 +205,14 @@ const Recommendations = ({
       )}
 
       {/* High Priority Recommendations */}
-      {recommendations.filter(r => r.priority === 'ALTO').length > 0 && (
+      {activeRecommendations.filter(r => r.priority === 'ALTO').length > 0 && (
         <div>
           <h3 className="text-lg font-semibold text-orange-800 mb-4 flex items-center">
             <Shield className="w-5 h-5 mr-2" />
             🟠 Alta Prioridad (Muy Recomendado)
           </h3>
           <div className="space-y-4">
-            {recommendations.filter(r => r.priority === 'ALTO').map((rec, index) => (
+            {activeRecommendations.filter(r => r.priority === 'ALTO').map((rec, index) => (
               <div key={rec.id} className="border border-orange-200 bg-orange-50 rounded-xl p-6 hover:shadow-lg transition-shadow">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
@@ -198,14 +275,14 @@ const Recommendations = ({
       )}
 
       {/* Medium Priority Recommendations */}
-      {recommendations.filter(r => r.priority === 'MEDIO').length > 0 && (
+      {activeRecommendations.filter(r => r.priority === 'MEDIO').length > 0 && (
         <div>
           <h3 className="text-lg font-semibold text-yellow-800 mb-4 flex items-center">
             <Eye className="w-5 h-5 mr-2" />
             🟡 Prioridad Media (Recomendado)
           </h3>
           <div className="space-y-4">
-            {recommendations.filter(r => r.priority === 'MEDIO').map((rec, index) => (
+            {activeRecommendations.filter(r => r.priority === 'MEDIO').map((rec, index) => (
               <div key={rec.id} className="border border-yellow-200 bg-yellow-50 rounded-xl p-6 hover:shadow-lg transition-shadow">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
@@ -324,14 +401,14 @@ const Recommendations = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center p-4 bg-red-50 rounded-lg">
             <div className="text-xl font-bold text-red-600 mb-2">
-              ${recommendations.filter(r => r.priority === 'CRÍTICO').reduce((sum, r) => sum + r.cost, 0).toLocaleString()}
+              ${activeRecommendations.filter(r => r.priority === 'CRÍTICO').reduce((sum, r) => sum + r.cost, 0).toLocaleString()}
             </div>
             <div className="text-sm text-gray-600">Solo críticos</div>
             <div className="text-xs text-gray-500 mt-1">Protección mínima esencial</div>
           </div>
           <div className="text-center p-4 bg-orange-50 rounded-lg">
             <div className="text-xl font-bold text-orange-600 mb-2">
-              ${recommendations.filter(r => ['CRÍTICO', 'ALTO'].includes(r.priority)).reduce((sum, r) => sum + r.cost, 0).toLocaleString()}
+              ${activeRecommendations.filter(r => ['CRÍTICO', 'ALTO'].includes(r.priority)).reduce((sum, r) => sum + r.cost, 0).toLocaleString()}
             </div>
             <div className="text-sm text-gray-600">Críticos + Alta prioridad</div>
             <div className="text-xs text-gray-500 mt-1">Protección recomendada</div>
@@ -354,14 +431,14 @@ const Recommendations = ({
             </div>
             <div>
               <span className="font-medium">Promedio por categoría:</span> 
-              <span className="ml-2">${Math.round(totalMonthlyCost / recommendations.length).toLocaleString()} CLP/mes</span>
+              <span className="ml-2">${Math.round(totalMonthlyCost / (activeRecommendations.length || 1)).toLocaleString()} CLP/mes</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Empty State */}
-      {recommendations.length === 0 && (
+      {activeRecommendations.length === 0 && (
         <div className="text-center py-12">
           <Shield className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">¡Excelente cobertura!</h3>

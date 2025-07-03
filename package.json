@@ -2,6 +2,7 @@
   "name": "seguros-inteligentes",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:5001",
   "dependencies": {
     "axios": "^1.10.0",
     "cors": "^2.8.5",
@@ -11,6 +12,7 @@
     "openai": "^5.8.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-router-dom": "^7.6.3",
     "react-scripts": "^5.0.1",
     "tailwindcss": "^3.3.0"
   },
